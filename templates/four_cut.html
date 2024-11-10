@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퍼스널 네컷 촬영</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            text-align: center;
+            margin-top: 20px;
+            width: 40%;
+            margin-right: 100px;
+        }
+        #webcam {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .frame-container {
+            width: 25%;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .frame-table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+        .frame-table td {
+            width: 100%;
+            height: 25%;
+            text-align: center;
+            vertical-align: middle;
+            padding: 5px;
+            box-sizing: border-box;
+            border: none;
+            {% if result.personal_color == '1' %}
+            background-color: #f7beb5;
+            {% elif result.personal_color == '2' %}
+            background-color: #f5c8dd;
+            {% elif result.personal_color == '3' %}
+            background-color: #76463c;
+            {% elif result.personal_color == '4' %}
+            background-color: #53001e;
+            {% endif %}
+        }
+        .frame-table img {
+            max-width: 95%;
+            max-height: 95%;
+            margin: 2.5%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .frame-label {
+            width: 100%;
+            height: 10%;
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            {% if result.personal_color == '1' %}
+            background-color: #f7beb5;
+            color: #aa837c;
+            {% elif result.personal_color == '2' %}
+            background-color: #f5c8dd;
+            color: #a98a99;
+            {% elif result.personal_color == '3' %}
+            background-color: #76463c;
+            color: #c9b0ab;
+            {% elif result.personal_color == '4' %}
+            background-color: #53001e;
+            color: #a98a99;
+            {% endif %}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>퍼스널 네컷 촬영</h1>
+        <video id="webcam" autoplay></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <div class="button-container">
+            <button id="capture-button" class="button">사진 촬영</button>
+            <button id="finish-button" class="button" style="display: none;">촬영 완료</button>
+        </div>
+    </div>
+    <div class="frame-container">
+        <table class="frame-table">
+            <tr><td id="frame1"></td></tr>
+            <tr><td id="frame2"></td></tr>
+            <tr><td id="frame3"></td></tr>
+            <tr><td id="frame4"></td></tr>
+        </table>
+        <div class="frame-label {% if result.personal_color == '1' %}spring{% elif result.personal_color == '2' %}summer{% elif result.personal_color == '3' %}fall{% elif result.personal_color == '4' %}winter{% endif %}">
+            {% if result.personal_color == '1' %}Spring Warm{% elif result.personal_color == '2' %}Summer Cool{% elif result.personal_color == '3' %}Fall Warm{% elif result.personal_color == '4' %}Winter Cool{% endif %}
+        </div>
+    </div>
+
+    <form id="four-cut-form" action="{{ url_for('four_cut_capture', user_id=user.id) }}" method="POST" style="display: none;">
+        <input type="hidden" name="photo1" id="photo1">
+        <input type="hidden" name="photo2" id="photo2">
+        <input type="hidden" name="photo3" id="photo3">
+        <input type="hidden" name="photo4" id="photo4">
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('webcam');
+            const canvas = document.getElementById('canvas');
+            const captureButton = document.getElementById('capture-button');
+            const finishButton = document.getElementById('finish-button');
+            const form = document.getElementById('four-cut-form');
+            const photoInputs = [
+                document.getElementById('photo1'),
+                document.getElementById('photo2'),
+                document.getElementById('photo3'),
+                document.getElementById('photo4')
+            ];
+            const frames = [
+                document.getElementById('frame1'),
+                document.getElementById('frame2'),
+                document.getElementById('frame3'),
+                document.getElementById('frame4')
+            ];
+            let photoIndex = 0;
+
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        video.srcObject = stream;
+                    })
+                    .catch(function(error) {
+                        console.error('웹캠 접근 실패:', error);
+                    });
+            } else {
+                alert('웹캠을 지원하지 않는 브라우저입니다.');
+            }
+
+            captureButton.addEventListener('click', function() {
+                if (photoIndex < 4) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // 캡처한 이미지를 Base64 형식으로 변환하여 hidden input에 저장합니다.
+                    const photoData = canvas.toDataURL('image/png');
+                    photoInputs[photoIndex].value = photoData;
+
+                    // 캡처한 이미지를 해당 프레임에 표시합니다.
+                    const img = document.createElement('img');
+                    img.src = photoData;
+                    frames[photoIndex].appendChild(img);
+
+                    photoIndex++;
+
+                    if (photoIndex === 4) {
+                        captureButton.style.display = 'none';
+                        finishButton.style.display = 'inline-block';
+                    }
+                }
+            });
+
+            finishButton.addEventListener('click', function() {
+                // 촬영 완료 후 약간의 지연을 두고 캡처
+                setTimeout(() => {
+                    const frameContainer = document.querySelector('.frame-container');
+
+                    // html2canvas로 frameContainer 캡처
+                    html2canvas(frameContainer).then(canvas => {
+                        // 캡처된 이미지를 Base64로 변환
+                        const imgData = canvas.toDataURL('image/png');
+
+                        // hidden input에 캡처된 이미지를 추가
+                        const capturedInput = document.createElement('input');
+                        capturedInput.type = 'hidden';
+                        capturedInput.name = 'captured_image';
+                        capturedInput.value = imgData;
+                        form.appendChild(capturedInput);
+
+                        // 폼 제출
+                        form.submit();
+                    });
+                }, 500); // 500ms 지연 후 캡처
+            });
+        });
+    </script>
+</body>
+</html>

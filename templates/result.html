@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퍼스널 컬러 진단 결과</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .progress {
+            display: none;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .progress .fa-spinner {
+            font-size: 2em;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button.secondary {
+            background-color: #28a745;
+        }
+        .button.secondary:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress" id="progress-indicator">
+            <i class="fa fa-spinner"></i> 분석 중...
+        </div>
+        <h1 class="title">퍼스널 컬러 진단 결과</h1>
+        <div class="result-content">
+            <p><strong>성별:</strong> {{ user.gender }}</p>
+            <p><strong>나이:</strong> {{ user.age }}</p>
+            <p><strong>학과:</strong> {{ user.department }}</p>
+            <p><strong>진단된 퍼스널 컬러:</strong> 
+                {% if result %}
+                    {% if result.personal_color == '1' %}
+                        봄 웜톤
+                    {% elif result.personal_color == '2' %}
+                        여름 쿨톤
+                    {% elif result.personal_color == '3' %}
+                        가을 웜톤
+                    {% elif result.personal_color == '4' %}
+                        겨울 쿨톤
+                    {% else %}
+                        분석 실패
+                    {% endif %}
+                {% else %}
+                    진단 결과가 없습니다.
+                {% endif %}
+            </p>
+        </div>
+        <div class="button-container">
+            <a href="{{ url_for('index') }}" class="button">처음으로</a>
+            <a href="{{ url_for('four_cut_capture', user_id=user.id) }}" class="button secondary">퍼스널 네컷 찍기</a>
+        </div>
+    </div>
+    <script>
+        // 페이지 로드 시 로딩 인디케이터 표시
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressIndicator = document.getElementById('progress-indicator');
+            progressIndicator.style.display = 'block';
+
+            // 일정 시간 후에 결과 표시 (여기서는 3초로 가정)
+            setTimeout(function() {
+                progressIndicator.style.display = 'none';
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

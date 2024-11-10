@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퍼스널 컬러 분석 중...</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="progress" id="progress-indicator">
+            <h1>분석 중입니다...</h1>
+            <i class="fa fa-spinner fa-spin" style="font-size: 3em;"></i>
+        </div>
+    </div>
+
+    <script>
+        // 일정 시간 후에 페이지를 새로고침합니다 (예: 3초 후)
+        setTimeout(function() {
+            window.location.reload();
+        }, 3000);
+    </script>
+</body>
+</html>
